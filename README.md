@@ -6,14 +6,14 @@ A **100% cloud-autonomous** Telegram bot pipeline powered by **GitHub Actions** 
 
 ## Daily Schedule (IST)
 
-| Slot | Time (IST) | UTC Cron | Content (5 items each = 10/post) |
+| Slot | Target Time (IST) | Off-Peak Primary + Backup Cron (UTC) | Content (5 items each = 10/post) |
 |---|---|---|---|
-| **Morning** | `7:00 AM IST` | `30 1 * * *` | 5 Vocabulary Words + 5 One-Word Substitutions (OWS) |
-| **Afternoon** | `1:00 PM IST` | `30 7 * * *` | 5 Idioms & Phrases + 5 Synonyms & Antonyms |
-| **Evening** | `7:00 PM IST` | `30 13 * * *` | 5 Homonyms & Homophones + 5 Spelling Boosters |
+| **Morning** | `~7:00 AM IST` | `21 1 * * *` (`6:51 AM`) + backup `51 1 * * *` (`7:21 AM`) | 5 Vocabulary Words + 5 One-Word Substitutions (OWS) |
+| **Afternoon** | `~1:00 PM IST` | `21 7 * * *` (`12:51 PM`) + backup `51 7 * * *` (`1:21 PM`) | 5 Idioms & Phrases + 5 Synonyms & Antonyms |
+| **Evening** | `~7:00 PM IST` | `21 13 * * *` (`6:51 PM`) + backup `51 13 * * *` (`7:21 PM`) | 5 Homonyms & Homophones + 5 Spelling Boosters |
 
 - **Zero Repeats**: Every posted item is saved to `data/history.json` and automatically committed back to GitHub so words never repeat.
-- **Duplicate-Safe**: Each IST date + slot is tracked in `posted_log`, preventing accidental double-posting on the same day (unless `--force` is used).
+- **Duplicate-Safe Backup Triggers**: Each slot uses an off-peak primary cron and a +30 min backup cron serialized via GitHub `concurrency`. If the primary run succeeds, the backup sees today's marker in `posted_log` and skips automatically.
 
 ---
 
@@ -57,11 +57,13 @@ A **100% cloud-autonomous** Telegram bot pipeline powered by **GitHub Actions** 
 
 ## Step 4: Test Immediately (1-Click from Phone or Browser)
 
-1. Go to your repo's **Actions** tab → **SSC English 3x Daily Telegram Posts**.
+1. Go to your repo's **Actions** tab and pick one of the three workflows:
+   - **Morning Dose (7:00 AM IST)**
+   - **Afternoon Dose (1:00 PM IST)**
+   - **Evening Dose (7:00 PM IST)**
 2. Click **Run workflow**:
-   - Choose `slot`: `morning`, `afternoon`, or `evening`
    - First test with `dry_run`: `true` to preview the exact generated post in the workflow logs without posting to your channel.
-   - Then run with `dry_run`: `false` to send a real live test post to `@sscstudyprephub`!
+   - Then run with `dry_run`: `false` to send a live test post to `@sscstudyprephub`!
 
 After that, leave it untouched — GitHub Actions runs automatically at **7:00 AM**, **1:00 PM**, and **7:00 PM IST** every day!
 

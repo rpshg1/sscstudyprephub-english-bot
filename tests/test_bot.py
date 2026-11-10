@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import requests
 
 from src.formatter import format_post_html, split_telegram_message
-from src.generator import generate_unique_post
+from src.generator import MissingApiKeyError, generate_unique_post
 from src.history_store import (
     already_posted_slot,
     empty_history,
@@ -140,9 +140,38 @@ class BotTests(unittest.TestCase):
             return _sample_morning(offset=10)
 
         spec = resolve_slot("morning")
-        result = generate_unique_post(spec, hist, invoker=fake_invoker)
+        result = generate_unique_post(spec, hist, retry_delay=0.0, invoker=fake_invoker)
         self.assertEqual(calls["count"], 2)
         self.assertEqual(result.vocab[0].word, "Word10")
+
+    def test_generator_retries_on_transient_api_error(self) -> None:
+        hist = empty_history()
+        calls = {"count": 0}
+
+        def flaky_invoker(spec, prompt, model):
+            calls["count"] += 1
+            if calls["count"] == 1:
+                raise RuntimeError("503 temporary backend error")
+            return _sample_evening()
+
+        result = generate_unique_post(
+            resolve_slot("evening"), hist, retry_delay=0.0, invoker=flaky_invoker
+        )
+        self.assertEqual(calls["count"], 2)
+        self.assertEqual(len(result.homonyms), 5)
+
+    def test_generator_fails_fast_on_missing_api_key(self) -> None:
+        calls = {"count": 0}
+
+        def missing_key_invoker(spec, prompt, model):
+            calls["count"] += 1
+            raise MissingApiKeyError("Missing key")
+
+        with self.assertRaises(MissingApiKeyError):
+            generate_unique_post(
+                resolve_slot("evening"), empty_history(), retry_delay=0.0, invoker=missing_key_invoker
+            )
+        self.assertEqual(calls["count"], 1)
 
     def test_format_html_escapes_special_chars_and_fits_slots(self) -> None:
         morning_html = format_post_html(resolve_slot("morning"), _sample_morning(), "10 Nov 2026")
