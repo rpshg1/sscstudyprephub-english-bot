@@ -144,23 +144,23 @@ class BotTests(unittest.TestCase):
         self.assertEqual(calls["count"], 2)
         self.assertEqual(result.vocab[0].word, "Word10")
 
-    def test_generator_retries_on_transient_api_error(self) -> None:
+    def test_generator_falls_back_across_models_on_503(self) -> None:
         hist = empty_history()
-        calls = {"count": 0}
+        tried_models = []
 
         def flaky_invoker(spec, prompt, model):
-            calls["count"] += 1
-            if calls["count"] == 1:
-                raise RuntimeError("503 temporary backend error")
+            tried_models.append(model)
+            if model == "gemini-3.8-flash":
+                raise RuntimeError("503 service_unavailable: high demand")
             return _sample_evening()
 
         result = generate_unique_post(
             resolve_slot("evening"), hist, retry_delay=0.0, invoker=flaky_invoker
         )
-        self.assertEqual(calls["count"], 2)
+        self.assertEqual(tried_models, ["gemini-3.8-flash", "gemini-3.5-flash-lite"])
         self.assertEqual(len(result.homonyms), 5)
 
-    def test_generator_fails_fast_on_missing_api_key(self) -> None:
+    def test_generator_fails_fast_on_missing_or_invalid_api_key(self) -> None:
         calls = {"count": 0}
 
         def missing_key_invoker(spec, prompt, model):
@@ -172,6 +172,18 @@ class BotTests(unittest.TestCase):
                 resolve_slot("evening"), empty_history(), retry_delay=0.0, invoker=missing_key_invoker
             )
         self.assertEqual(calls["count"], 1)
+
+        invalid_calls = {"count": 0}
+
+        def invalid_key_invoker(spec, prompt, model):
+            invalid_calls["count"] += 1
+            raise RuntimeError("400 API_KEY_INVALID")
+
+        with self.assertRaises(RuntimeError):
+            generate_unique_post(
+                resolve_slot("evening"), empty_history(), retry_delay=0.0, invoker=invalid_key_invoker
+            )
+        self.assertEqual(invalid_calls["count"], 1)
 
     def test_format_html_escapes_special_chars_and_fits_slots(self) -> None:
         morning_html = format_post_html(resolve_slot("morning"), _sample_morning(), "10 Nov 2026")
