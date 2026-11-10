@@ -1,9 +1,23 @@
 {
   "vocab": [],
   "ows": [],
-  "idioms": [],
-  "syn_ant": [],
+  "idioms": [
+    "at one s wit s end",
+    "bite the bullet",
+    "call it a day",
+    "gift of the gab",
+    "spill the beans"
+  ],
+  "syn_ant": [
+    "diligent",
+    "candid",
+    "mitigate",
+    "ephemeral",
+    "audacious"
+  ],
   "homonyms": [],
   "spelling": [],
-  "posted_log": []
+  "posted_log": [
+    "2026-11-10:afternoon"
+  ]
 }
