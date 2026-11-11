@@ -1,6 +1,18 @@
 {
-  "vocab": [],
-  "ows": [],
+  "vocab": [
+    "abstain",
+    "candid",
+    "ephemeral",
+    "prudent",
+    "venerate"
+  ],
+  "ows": [
+    "misanthrope",
+    "theist",
+    "extempore",
+    "paleography",
+    "aviary"
+  ],
   "idioms": [
     "at one s wit s end",
     "bite the bullet",
@@ -31,6 +43,7 @@
   ],
   "posted_log": [
     "2026-11-10:afternoon",
-    "2026-11-10:evening"
+    "2026-11-10:evening",
+    "2026-11-11:morning"
   ]
 }
