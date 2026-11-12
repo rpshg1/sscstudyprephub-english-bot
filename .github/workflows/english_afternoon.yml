@@ -2,10 +2,8 @@ name: Afternoon Dose (1:00 PM IST)
 
 on:
   schedule:
-    # Off-peak primary: 12:51 PM IST (07:21 UTC) - avoids :00/:30 GitHub cron congestion
-    - cron: '21 7 * * *'
-    # Automatic backup 30 mins later: 1:21 PM IST (07:51 UTC) - auto-skips if already posted
-    - cron: '51 7 * * *'
+    # 12:58 PM IST (07:28 UTC)
+    - cron: '28 7 * * *'
   workflow_dispatch:
     inputs:
       force:

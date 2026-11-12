@@ -6,14 +6,14 @@ A **100% cloud-autonomous** Telegram bot pipeline powered by **GitHub Actions** 
 
 ## Daily Schedule (IST)
 
-| Slot | Target Time (IST) | Off-Peak Primary + Backup Cron (UTC) | Content (5 items each = 10/post) |
+| Slot | Target Time (IST) | Primary Cron (UTC) + Catch-Up Guard | Content (5 items each = 10/post) |
 |---|---|---|---|
-| **Morning** | `~7:00 AM IST` | `21 1 * * *` (`6:51 AM`) + backup `51 1 * * *` (`7:21 AM`) | 5 Vocabulary Words + 5 One-Word Substitutions (OWS) |
-| **Afternoon** | `~1:00 PM IST` | `21 7 * * *` (`12:51 PM`) + backup `51 7 * * *` (`1:21 PM`) | 5 Idioms & Phrases + 5 Synonyms & Antonyms |
-| **Evening** | `~7:00 PM IST` | `21 13 * * *` (`6:51 PM`) + backup `51 13 * * *` (`7:21 PM`) | 5 Homonyms & Homophones + 5 Spelling Boosters |
+| **Morning** | `~7:00 AM IST` | `28 1 * * *` (`6:58 AM`) + catch-up `6:47–9:47 AM` | 5 Vocabulary Words + 5 One-Word Substitutions (OWS) |
+| **Afternoon** | `~1:00 PM IST` | `28 7 * * *` (`12:58 PM`) + catch-up `12:47–3:47 PM` | 5 Idioms & Phrases + 5 Synonyms & Antonyms |
+| **Evening** | `~7:00 PM IST` | `28 13 * * *` (`6:58 PM`) + catch-up `6:47–9:47 PM` | 5 Homonyms & Homophones + 5 Spelling Boosters |
 
 - **Zero Repeats**: Every posted item is saved to `data/history.json` and automatically committed back to GitHub so words never repeat.
-- **Duplicate-Safe Backup Triggers**: Each slot uses an off-peak primary cron and a +30 min backup cron serialized via GitHub `concurrency`. If the primary run succeeds, the backup sees today's marker in `posted_log` and skips automatically.
+- **Automatic Catch-Up Guard**: `english_catchup.yml` checks across each window (`:17` and `:47` off-peak minutes) and skips in ~3 seconds if already posted. If GitHub Actions delays or drops the primary trigger, the catch-up workflow posts it automatically without double-posting.
 
 ---
 

@@ -29,7 +29,7 @@ from src.schemas import (
     VocabItem,
 )
 from src.main import parse_args, run
-from src.slots import IST, resolve_slot
+from src.slots import IST, resolve_catchup_slot, resolve_slot
 from src.telegram_client import send_telegram_html
 
 
@@ -244,6 +244,45 @@ class BotTests(unittest.TestCase):
             # Re-running same slot without --force skips Telegram call.
             code = run(parse_args(["--slot", "morning", "--history-file", str(hist_path)]))
             self.assertEqual(code, 0)
+            self.assertEqual(mock_send.call_count, 1)
+
+    def test_catchup_slot_resolution(self) -> None:
+        # Before morning window or between windows -> None
+        self.assertIsNone(resolve_catchup_slot([], datetime(2026, 11, 12, 6, 30, tzinfo=IST)))
+        self.assertIsNone(resolve_catchup_slot([], datetime(2026, 11, 12, 12, 35, tzinfo=IST)))
+        # Inside afternoon window when unposted -> afternoon
+        spec = resolve_catchup_slot(["2026-11-12:morning"], datetime(2026, 11, 12, 14, 17, tzinfo=IST))
+        self.assertIsNotNone(spec)
+        self.assertEqual(spec.name, "afternoon")
+        # Already posted -> None
+        self.assertIsNone(
+            resolve_catchup_slot(
+                ["2026-11-12:morning", "2026-11-12:afternoon"],
+                datetime(2026, 11, 12, 14, 17, tzinfo=IST),
+            )
+        )
+
+    @patch("src.main.send_telegram_html")
+    @patch("src.main.generate_unique_post")
+    @patch("src.main.current_ist_now")
+    def test_main_catchup_posts_once_and_skips_after(
+        self,
+        mock_now: MagicMock,
+        mock_gen: MagicMock,
+        mock_send: MagicMock,
+    ) -> None:
+        mock_now.return_value = datetime(2026, 11, 12, 19, 17, tzinfo=IST)
+        mock_gen.return_value = _sample_evening()
+        mock_send.return_value = [{"ok": True}]
+
+        with TemporaryDirectory() as tmp:
+            hist_path = Path(tmp) / "history.json"
+            self.assertEqual(run(parse_args(["--slot", "catchup", "--history-file", str(hist_path)])), 0)
+            self.assertEqual(mock_send.call_count, 1)
+            self.assertTrue(already_posted_slot(load_history(hist_path), "2026-11-12", "evening"))
+
+            # Second catchup run in same evening window skips cleanly.
+            self.assertEqual(run(parse_args(["--slot", "catchup", "--history-file", str(hist_path)])), 0)
             self.assertEqual(mock_send.call_count, 1)
 
 

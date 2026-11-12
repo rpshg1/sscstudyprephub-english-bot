@@ -14,7 +14,7 @@ from .history_store import (
     record_posted_items,
     save_history,
 )
-from .slots import current_ist_now, resolve_slot
+from .slots import current_ist_now, resolve_catchup_slot, resolve_slot
 from .telegram_client import send_telegram_html
 
 DEFAULT_HISTORY_PATH = Path(__file__).resolve().parent.parent / "data" / "history.json"
@@ -35,7 +35,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--slot",
         default=os.getenv("POST_SLOT", "auto"),
-        choices=["auto", "morning", "afternoon", "evening"],
+        choices=["auto", "catchup", "morning", "afternoon", "evening"],
         help="Target slot (defaults to POST_SLOT env var or IST time auto-detection).",
     )
     parser.add_argument(
@@ -70,12 +70,18 @@ def run(args: argparse.Namespace) -> int:
     now_ist = current_ist_now()
     date_iso = now_ist.strftime("%Y-%m-%d")
     date_label = now_ist.strftime("%d %b %Y")
-    spec = resolve_slot(args.slot, now_ist=now_ist)
-
     history = load_history(args.history_file)
-    if not args.dry_run and not args.force and already_posted_slot(history, date_iso, spec.name):
-        print(f"[Skip] Slot '{spec.name}' already posted on {date_iso} IST. Pass --force to override.")
-        return 0
+
+    if args.slot == "catchup":
+        spec = resolve_catchup_slot(history.get("posted_log", []), now_ist=now_ist)
+        if spec is None:
+            print(f"[Skip] No due unposted slot at {now_ist.strftime('%H:%M')} IST ({date_iso}).")
+            return 0
+    else:
+        spec = resolve_slot(args.slot, now_ist=now_ist)
+        if not args.dry_run and not args.force and already_posted_slot(history, date_iso, spec.name):
+            print(f"[Skip] Slot '{spec.name}' already posted on {date_iso} IST. Pass --force to override.")
+            return 0
 
     print(f"Generating '{spec.name}' ({spec.schedule_label}) post for {date_label} using {args.model}...")
     post_data = generate_unique_post(spec=spec, history=history, model=args.model)

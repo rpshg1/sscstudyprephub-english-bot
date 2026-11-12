@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Tuple, Type
+from typing import Dict, Optional, Tuple, Type
 from pydantic import BaseModel
 
 from .schemas import AfternoonPost, EveningPost, MorningPost
@@ -83,3 +83,28 @@ def resolve_slot(requested: str = "auto", now_ist: datetime | None = None) -> Sl
     if minutes < 17 * 60:
         return SLOT_SPECS["afternoon"]
     return SLOT_SPECS["evening"]
+
+
+CATCHUP_WINDOWS: Tuple[Tuple[int, int, str], ...] = (
+    (6 * 60 + 45, 12 * 60 + 30, "morning"),
+    (12 * 60 + 45, 18 * 60 + 30, "afternoon"),
+    (18 * 60 + 45, 24 * 60, "evening"),
+)
+
+
+def resolve_catchup_slot(
+    posted_log: list[str] | set[str],
+    now_ist: datetime | None = None,
+) -> Optional[SlotSpec]:
+    """Return the active window's slot if it is due and not yet posted today."""
+    dt = now_ist or current_ist_now()
+    date_iso = dt.strftime("%Y-%m-%d")
+    minutes = dt.hour * 60 + dt.minute
+    posted = set(posted_log)
+
+    for start_min, end_min, slot_name in CATCHUP_WINDOWS:
+        if start_min <= minutes < end_min:
+            if f"{date_iso}:{slot_name}" in posted:
+                return None
+            return SLOT_SPECS[slot_name]
+    return None
