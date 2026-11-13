@@ -82,7 +82,12 @@
     "canvas | canvass",
     "heard | herd",
     "bare | bear",
-    "right | write"
+    "right | write",
+    "censor | sensor",
+    "ensure | insure",
+    "cite | site",
+    "fair | fare",
+    "elicit | illicit"
   ],
   "spelling": [
     "lieutenant",
@@ -99,7 +104,12 @@
     "conscious",
     "embarrass",
     "restaurant",
-    "possession"
+    "possession",
+    "entrepreneur",
+    "occurrence",
+    "recommendation",
+    "harass",
+    "exaggerate"
   ],
   "posted_log": [
     "2026-11-10:afternoon",
@@ -110,6 +120,7 @@
     "2026-11-12:morning",
     "2026-11-13:morning",
     "2026-11-13:afternoon",
-    "2026-11-13:evening"
+    "2026-11-13:evening",
+    "2026-11-14:evening"
   ]
 }
