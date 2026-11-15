@@ -117,7 +117,12 @@
     "ensure | insure",
     "cite | site",
     "fair | fare",
-    "elicit | illicit"
+    "elicit | illicit",
+    "eminent | imminent",
+    "allusion | illusion",
+    "coarse | course",
+    "berth | birth",
+    "judicial | judicious"
   ],
   "spelling": [
     "lieutenant",
@@ -139,7 +144,12 @@
     "occurrence",
     "recommendation",
     "harass",
-    "exaggerate"
+    "exaggerate",
+    "surveillance",
+    "questionnaire",
+    "miscellaneous",
+    "perseverance",
+    "hierarchy"
   ],
   "posted_log": [
     "2026-11-10:afternoon",
@@ -154,6 +164,7 @@
     "2026-11-14:evening",
     "2026-11-14:afternoon",
     "2026-11-14:morning",
-    "2026-11-15:afternoon"
+    "2026-11-15:afternoon",
+    "2026-11-15:evening"
   ]
 }
