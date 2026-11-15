@@ -122,7 +122,12 @@
     "allusion | illusion",
     "coarse | course",
     "berth | birth",
-    "judicial | judicious"
+    "judicial | judicious",
+    "ascent | assent",
+    "complacent | complaisant",
+    "discreet | discrete",
+    "precede | proceed",
+    "loose | lose"
   ],
   "spelling": [
     "lieutenant",
@@ -149,7 +154,12 @@
     "questionnaire",
     "miscellaneous",
     "perseverance",
-    "hierarchy"
+    "hierarchy",
+    "acknowledgment",
+    "resplendent",
+    "indispensable",
+    "conscientious",
+    "effervescence"
   ],
   "posted_log": [
     "2026-11-10:afternoon",
@@ -165,6 +175,7 @@
     "2026-11-14:afternoon",
     "2026-11-14:morning",
     "2026-11-15:afternoon",
-    "2026-11-15:evening"
+    "2026-11-15:evening",
+    "2026-11-16:evening"
   ]
 }
