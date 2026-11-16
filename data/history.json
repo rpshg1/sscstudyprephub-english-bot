@@ -147,7 +147,12 @@
     "complacent | complaisant",
     "discreet | discrete",
     "precede | proceed",
-    "loose | lose"
+    "loose | lose",
+    "adept | adopt",
+    "feat | feet",
+    "device | devise",
+    "ingenious | ingenuous",
+    "wary | weary"
   ],
   "spelling": [
     "lieutenant",
@@ -179,7 +184,12 @@
     "resplendent",
     "indispensable",
     "conscientious",
-    "effervescence"
+    "effervescence",
+    "belligerent",
+    "fahrenheit",
+    "superfluous",
+    "acquaintance",
+    "hypocrisy"
   ],
   "posted_log": [
     "2026-11-10:afternoon",
@@ -198,6 +208,7 @@
     "2026-11-15:evening",
     "2026-11-16:evening",
     "2026-11-16:morning",
-    "2026-11-16:afternoon"
+    "2026-11-16:afternoon",
+    "2026-11-17:evening"
   ]
 }
