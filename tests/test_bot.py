@@ -29,7 +29,7 @@ from src.schemas import (
     VocabItem,
 )
 from src.main import parse_args, run
-from src.slots import IST, resolve_catchup_slot, resolve_slot
+from src.slots import IST, is_within_slot_window, resolve_catchup_slot, resolve_slot
 from src.telegram_client import send_telegram_html
 
 
@@ -107,6 +107,47 @@ class BotTests(unittest.TestCase):
         self.assertEqual(resolve_slot("auto", datetime(2026, 11, 10, 13, 0, tzinfo=IST)).name, "afternoon")
         self.assertEqual(resolve_slot("auto", datetime(2026, 11, 10, 19, 0, tzinfo=IST)).name, "evening")
         self.assertEqual(resolve_slot("evening", datetime(2026, 11, 10, 7, 0, tzinfo=IST)).name, "evening")
+
+    def test_is_within_slot_window(self) -> None:
+        # Morning window (6:30 AM to 9:30 AM)
+        self.assertTrue(is_within_slot_window("morning", datetime(2026, 11, 10, 7, 0, tzinfo=IST)))
+        self.assertFalse(is_within_slot_window("morning", datetime(2026, 11, 10, 14, 30, tzinfo=IST)))
+
+        # Afternoon window (12:30 PM to 3:30 PM)
+        self.assertTrue(is_within_slot_window("afternoon", datetime(2026, 11, 10, 13, 0, tzinfo=IST)))
+        self.assertFalse(is_within_slot_window("afternoon", datetime(2026, 11, 10, 17, 0, tzinfo=IST)))
+
+        # Evening window (6:30 PM to 9:30 PM)
+        self.assertTrue(is_within_slot_window("evening", datetime(2026, 11, 10, 19, 0, tzinfo=IST)))
+        self.assertFalse(is_within_slot_window("evening", datetime(2026, 11, 10, 22, 0, tzinfo=IST)))
+
+    @patch("src.main.send_telegram_html")
+    @patch("src.main.generate_unique_post")
+    @patch("src.main.current_ist_now")
+    def test_delayed_run_outside_window_is_blocked(
+        self,
+        mock_now: MagicMock,
+        mock_gen: MagicMock,
+        mock_send: MagicMock,
+    ) -> None:
+        # Simulate GitHub runner triggering a morning run 7 hours late at 2:30 PM IST
+        mock_now.return_value = datetime(2026, 11, 10, 14, 30, tzinfo=IST)
+        mock_gen.return_value = _sample_morning()
+        mock_send.return_value = [{"ok": True}]
+
+        with TemporaryDirectory() as tmp:
+            hist_path = Path(tmp) / "history.json"
+            # Unforced run should block cleanly (return 0) without posting
+            code = run(parse_args(["--slot", "morning", "--history-file", str(hist_path)]))
+            self.assertEqual(code, 0)
+            mock_send.assert_not_called()
+            self.assertFalse(hist_path.exists())
+
+            # Forced manual run should bypass the window check and post
+            code = run(parse_args(["--slot", "morning", "--force", "--history-file", str(hist_path)]))
+            self.assertEqual(code, 0)
+            self.assertEqual(mock_send.call_count, 1)
+            self.assertTrue(hist_path.exists())
 
     def test_homonym_symmetry_normalization(self) -> None:
         self.assertEqual(

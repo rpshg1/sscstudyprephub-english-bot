@@ -2,12 +2,12 @@ name: Evening Dose (7:00 PM IST)
 
 on:
   schedule:
-    # 6:58 PM IST (13:28 UTC)
+    # 6:58 PM IST (13:28 UTC) - avoids top-of-hour congestion
     - cron: '28 13 * * *'
   workflow_dispatch:
     inputs:
       force:
-        description: 'Post even if evening slot already posted today'
+        description: 'Post even if evening slot already posted today / outside window'
         required: false
         default: false
         type: boolean
@@ -20,13 +20,10 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: ssc-english-bot
-  cancel-in-progress: false
-
 jobs:
   post-evening:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Checkout Latest Main
@@ -50,6 +47,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID != '' && secrets.TELEGRAM_CHAT_ID || '@sscstudyprephub' }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FORCE_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.force }}
         run: |
           FLAGS=(--slot evening)
           if [ "${{ inputs.force }}" = "true" ]; then

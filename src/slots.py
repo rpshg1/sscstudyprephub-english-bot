@@ -85,6 +85,24 @@ def resolve_slot(requested: str = "auto", now_ist: datetime | None = None) -> Sl
     return SLOT_SPECS["evening"]
 
 
+SLOT_WINDOWS: Dict[str, Tuple[int, int]] = {
+    # (start_minute, end_minute) from midnight IST
+    "morning": (6 * 60 + 30, 9 * 60 + 30),     # 6:30 AM to 9:30 AM IST (Target 7:00 AM)
+    "afternoon": (12 * 60 + 30, 15 * 60 + 30), # 12:30 PM to 3:30 PM IST (Target 1:00 PM)
+    "evening": (18 * 60 + 30, 21 * 60 + 30),   # 6:30 PM to 9:30 PM IST (Target 7:00 PM)
+}
+
+
+def is_within_slot_window(slot_name: str, now_ist: datetime | None = None) -> bool:
+    """Check if current IST time falls within the allowed posting window for the slot."""
+    if slot_name not in SLOT_WINDOWS:
+        return True
+    dt = now_ist or current_ist_now()
+    cur_mins = dt.hour * 60 + dt.minute
+    start_m, end_m = SLOT_WINDOWS[slot_name]
+    return start_m <= cur_mins <= end_m
+
+
 CATCHUP_WINDOWS: Tuple[Tuple[int, int, str], ...] = (
     (6 * 60 + 45, 12 * 60 + 30, "morning"),
     (12 * 60 + 45, 18 * 60 + 30, "afternoon"),

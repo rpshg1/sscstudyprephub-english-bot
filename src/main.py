@@ -14,7 +14,7 @@ from .history_store import (
     record_posted_items,
     save_history,
 )
-from .slots import current_ist_now, resolve_catchup_slot, resolve_slot
+from .slots import current_ist_now, is_within_slot_window, resolve_catchup_slot, resolve_slot
 from .telegram_client import send_telegram_html
 
 DEFAULT_HISTORY_PATH = Path(__file__).resolve().parent.parent / "data" / "history.json"
@@ -57,7 +57,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Post even if this slot was already posted today (IST).",
+        default=os.getenv("FORCE_RUN", "").lower() in ("true", "1"),
+        help="Post even if this slot was already posted today (IST) or outside slot window.",
     )
     return parser.parse_args(argv)
 
@@ -81,6 +82,15 @@ def run(args: argparse.Namespace) -> int:
         spec = resolve_slot(args.slot, now_ist=now_ist)
         if not args.dry_run and not args.force and already_posted_slot(history, date_iso, spec.name):
             print(f"[Skip] Slot '{spec.name}' already posted on {date_iso} IST. Pass --force to override.")
+            return 0
+        if not args.dry_run and not args.force and not is_within_slot_window(spec.name, now_ist=now_ist):
+            print(
+                f"\n==================================================\n"
+                f"[BLOCKED] Current time is {now_ist.strftime('%I:%M %p')} IST.\n"
+                f"[BLOCKED] Outside allowed posting window for '{spec.name}' dose ({spec.schedule_label}).\n"
+                f"[BLOCKED] Cron was delayed by GitHub runner. Aborting cleanly to prevent student disturbance.\n"
+                f"=================================================="
+            )
             return 0
 
     print(f"Generating '{spec.name}' ({spec.schedule_label}) post for {date_label} using {args.model}...")

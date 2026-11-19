@@ -45,7 +45,7 @@ def build_model_chain(primary_model: str) -> List[str]:
 def _is_invalid_api_key_error(exc: Exception) -> bool:
     """Detect fatal invalid-API-key errors that will fail across all models."""
     msg = str(exc).lower()
-    return "api_key_invalid" in msg or "api key not valid" in msg
+    return "api_key_invalid" in msg or "api key not valid" in msg or "unauthenticated" in msg
 
 
 def _build_prompt(
@@ -72,7 +72,7 @@ def _build_prompt(
 
 
 def _default_invoke_gemini(spec: SlotSpec, prompt: str, model: str) -> BaseModel:
-    """Invoke Gemini Interactions API with bounded HTTP retries so fallback is fast."""
+    """Invoke Gemini Generate Content API with bounded HTTP retries so fallback is fast."""
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
         raise MissingApiKeyError(
@@ -90,20 +90,20 @@ def _default_invoke_gemini(spec: SlotSpec, prompt: str, model: str) -> BaseModel
             ),
         ),
     )
-    interaction = client.interactions.create(
+    response = client.models.generate_content(
         model=model,
-        system_instruction=SYSTEM_INSTRUCTION,
-        input=prompt,
-        store=False,
-        response_format={
-            "type": "text",
-            "mime_type": "application/json",
-            "schema": spec.schema.model_json_schema(),
-        },
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTION,
+            response_mime_type="application/json",
+            response_schema=spec.schema,
+        ),
     )
-    if not interaction.output_text:
-        raise RuntimeError(f"Model '{model}' returned an empty response.")
-    return spec.schema.model_validate_json(interaction.output_text)
+    if response.parsed:
+        return response.parsed
+    if response.text:
+        return spec.schema.model_validate_json(response.text)
+    raise RuntimeError(f"Model '{model}' returned an empty response.")
 
 
 def generate_unique_post(
